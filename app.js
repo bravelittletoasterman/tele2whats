@@ -1,4 +1,7 @@
 const installButton = document.getElementById("installButton");
+const telegramLink = document.getElementById("telegramLink");
+const botToken = document.getElementById("botToken");
+const oneClick = document.getElementById("oneClick");
 const loadDemo = document.getElementById("loadDemo");
 const fileInput = document.getElementById("fileInput");
 const telegramSummary = document.getElementById("telegramSummary");
@@ -6,6 +9,7 @@ const buildPacks = document.getElementById("buildPacks");
 const downloadJson = document.getElementById("downloadJson");
 const output = document.getElementById("output");
 const copyJson = document.getElementById("copyJson");
+const openWhatsApp = document.getElementById("openWhatsApp");
 
 let deferredPrompt;
 let telegramPacks = [];
@@ -88,6 +92,38 @@ buildPacks.addEventListener("click", () => {
   copyJson.disabled = false;
 });
 
+oneClick.addEventListener("click", async () => {
+  const linkValue = telegramLink.value.trim();
+  const tokenValue = botToken.value.trim();
+
+  oneClick.disabled = true;
+  oneClick.textContent = "Converting...";
+  telegramSummary.textContent = "Fetching sticker data from Telegram...";
+
+  try {
+    const pack = await fetchTelegramStickerSet(linkValue, tokenValue);
+    telegramPacks = [pack];
+    updateSummary();
+    whatsappPayload = buildWhatsAppPayload(telegramPacks);
+    output.textContent = JSON.stringify(whatsappPayload, null, 2);
+    downloadJson.disabled = false;
+    copyJson.disabled = false;
+    await navigator.clipboard.writeText(
+      JSON.stringify(whatsappPayload, null, 2)
+    );
+    downloadJson.click();
+    if (openWhatsApp?.href) {
+      window.open(openWhatsApp.href, "_blank", "noreferrer");
+    }
+    telegramSummary.textContent = `Converted ${pack.name}. JSON copied and WhatsApp opened.`;
+  } catch (error) {
+    telegramSummary.textContent = `Conversion failed: ${error.message}`;
+  } finally {
+    oneClick.disabled = false;
+    oneClick.textContent = "Convert & Open WhatsApp";
+  }
+});
+
 copyJson.addEventListener("click", async () => {
   if (!whatsappPayload) {
     return;
@@ -139,7 +175,7 @@ function buildWhatsAppPayload(packs) {
       const end = start + chunk.length;
       return {
         identifier: `${pack.identifier || slugify(pack.name)}_${index + 1}`,
-        name: `${pack.name} (${start}-${end})`,
+        name: `${pack.name} ${index + 1}`,
         publisher: pack.publisher || metadataDefaults.publisher,
         tray_image_file: chunk[0]?.image_file || "tray.png",
         publisher_email: metadataDefaults.publisher_email,
@@ -149,12 +185,82 @@ function buildWhatsAppPayload(packs) {
         stickers: chunk.map((sticker) => ({
           image_file: sticker.image_file,
           emojis: sticker.emojis || ["✨"],
+          source_url: sticker.source_url,
         })),
       };
     });
   });
 
   return { sticker_packs };
+}
+
+function parseStickerSetName(link) {
+  const cleaned = link.trim().split(/[?#]/)[0];
+  if (!cleaned) {
+    throw new Error("Add a Telegram sticker link first.");
+  }
+  const match = cleaned.match(/addstickers\/([a-zA-Z0-9_]+)/);
+  if (match) {
+    return match[1];
+  }
+  const fallback = cleaned.split("/").pop();
+  if (!fallback) {
+    throw new Error("Unable to read the sticker set name from the link.");
+  }
+  return fallback;
+}
+
+async function fetchTelegramStickerSet(link, token) {
+  if (!token) {
+    throw new Error("Add a Telegram bot token to access sticker files.");
+  }
+  const setName = parseStickerSetName(link);
+  const setResponse = await fetch(
+    `https://api.telegram.org/bot${token}/getStickerSet?name=${encodeURIComponent(
+      setName
+    )}`
+  );
+  const setData = await setResponse.json();
+  if (!setData.ok) {
+    throw new Error(setData.description || "Telegram sticker set lookup failed.");
+  }
+
+  const stickers = await Promise.all(
+    setData.result.stickers.map(async (sticker, index) => {
+      const fileResponse = await fetch(
+        `https://api.telegram.org/bot${token}/getFile?file_id=${encodeURIComponent(
+          sticker.file_id
+        )}`
+      );
+      const fileData = await fileResponse.json();
+      if (!fileData.ok) {
+        throw new Error(
+          fileData.description || "Telegram sticker file lookup failed."
+        );
+      }
+      const filePath = fileData.result.file_path;
+      const fileName = filePath.split("/").pop() || `sticker_${index + 1}.webp`;
+      const emojiList = sticker.emojis || sticker.emoji_list || [];
+      const emojiValue = sticker.emoji
+        ? [sticker.emoji]
+        : Array.isArray(emojiList) && emojiList.length
+        ? emojiList
+        : ["✨"];
+
+      return {
+        image_file: fileName,
+        emojis: emojiValue,
+        source_url: `https://api.telegram.org/file/bot${token}/${filePath}`,
+      };
+    })
+  );
+
+  return {
+    name: setData.result.title || setName,
+    identifier: setData.result.name || setName,
+    publisher: metadataDefaults.publisher,
+    stickers,
+  };
 }
 
 function chunkArray(array, size) {

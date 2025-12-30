@@ -26,24 +26,50 @@
       <section class="card">
         <h2>1. Load Telegram stickers</h2>
         <p>
-          Connect a Telegram export or use the demo data to simulate every
-          installed sticker pack.
+          Paste a Telegram sticker link and a bot token, then convert it into
+          WhatsApp-sized packs (30 stickers each) with one click.
         </p>
+        <div class="form-grid">
+          <label class="field">
+            Telegram sticker link
+            <input
+              id="telegramLink"
+              type="text"
+              placeholder="https://t.me/addstickers/AstralCats"
+              autocomplete="off"
+            />
+          </label>
+          <label class="field">
+            Telegram bot token
+            <input
+              id="botToken"
+              type="password"
+              placeholder="123456:ABC-DEF..."
+              autocomplete="off"
+            />
+          </label>
+        </div>
         <div class="actions">
-          <button id="loadDemo" type="button">Load demo stickers</button>
+          <button id="oneClick" type="button">Convert &amp; Open WhatsApp</button>
+          <button id="loadDemo" type="button" class="ghost">Load demo stickers</button>
           <label class="file-input">
             <input id="fileInput" type="file" accept="application/json" />
             <span>Import JSON export</span>
           </label>
         </div>
         <div id="telegramSummary" class="summary">No sticker packs loaded.</div>
+        <p class="note">
+          We call Telegram’s Bot API to download sticker files and prepare them
+          for WhatsApp. WhatsApp still requires a sticker app to publish packs,
+          so we generate the compatible JSON and open WhatsApp for you.
+        </p>
       </section>
 
       <section class="card">
         <h2>2. Build WhatsApp packs</h2>
         <p>
           Each Telegram pack becomes WhatsApp chunks of 30 stickers named with
-          range labels like “Pack Name (0-30)”.
+          the original pack name plus a number (for example “Astral Cats 1”).
         </p>
         <div class="actions">
           <button id="buildPacks" type="button" disabled>Build packs</button>
