@@ -1,7 +1,7 @@
 const installButton = document.getElementById("installButton");
 const telegramLink = document.getElementById("telegramLink");
-const botToken = document.getElementById("botToken");
 const oneClick = document.getElementById("oneClick");
+const connectBot = document.getElementById("connectBot");
 const loadDemo = document.getElementById("loadDemo");
 const fileInput = document.getElementById("fileInput");
 const telegramSummary = document.getElementById("telegramSummary");
@@ -14,6 +14,7 @@ const openWhatsApp = document.getElementById("openWhatsApp");
 let deferredPrompt;
 let telegramPacks = [];
 let whatsappPayload = null;
+const tokenStorageKey = "tele2whats.telegramBotToken";
 
 const demoTelegramData = [
   {
@@ -92,15 +93,35 @@ buildPacks.addEventListener("click", () => {
   copyJson.disabled = false;
 });
 
+connectBot.addEventListener("click", () => {
+  const token = window.prompt(
+    "Paste your BotFather token so we can fetch sticker files."
+  );
+  if (!token) {
+    telegramSummary.textContent = "BotFather token not saved yet.";
+    return;
+  }
+  localStorage.setItem(tokenStorageKey, token.trim());
+  telegramSummary.textContent =
+    "BotFather token saved. You can now convert sticker links in one click.";
+});
+
 oneClick.addEventListener("click", async () => {
   const linkValue = telegramLink.value.trim();
-  const tokenValue = botToken.value.trim();
+  const tokenValue = getStoredToken();
 
   oneClick.disabled = true;
   oneClick.textContent = "Converting...";
   telegramSummary.textContent = "Fetching sticker data from Telegram...";
 
   try {
+    if (!tokenValue) {
+      telegramSummary.textContent =
+        "Add your BotFather token once via “Connect BotFather” to fetch sticker files.";
+      connectBot.focus();
+      window.open("https://t.me/BotFather", "_blank", "noreferrer");
+      return;
+    }
     const pack = await fetchTelegramStickerSet(linkValue, tokenValue);
     telegramPacks = [pack];
     updateSummary();
@@ -163,6 +184,10 @@ function updateSummary() {
   );
   telegramSummary.textContent = `${telegramPacks.length} packs loaded with ${totalStickers} stickers.`;
   buildPacks.disabled = false;
+}
+
+function getStoredToken() {
+  return localStorage.getItem(tokenStorageKey);
 }
 
 function buildWhatsAppPayload(packs) {

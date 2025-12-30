@@ -40,18 +40,10 @@
               autocomplete="off"
             />
           </label>
-          <label class="field">
-            Telegram bot token
-            <input
-              id="botToken"
-              type="password"
-              placeholder="123456:ABC-DEF..."
-              autocomplete="off"
-            />
-          </label>
         </div>
         <div class="actions">
           <button id="oneClick" type="button">Convert &amp; Open WhatsApp</button>
+          <button id="connectBot" type="button" class="ghost">Connect BotFather</button>
           <button id="loadDemo" type="button" class="ghost">Load demo stickers</button>
           <label class="file-input">
             <input id="fileInput" type="file" accept="application/json" />
@@ -60,10 +52,11 @@
         </div>
         <div id="telegramSummary" class="summary">No sticker packs loaded.</div>
         <p class="note">
-          Create a Telegram bot token with BotFather so we can call Telegram’s
-          Bot API to download sticker files and prepare them for WhatsApp.
-          WhatsApp still requires a sticker app to publish packs, so we
-          generate the compatible JSON and open WhatsApp for you.
+          Create and save a Telegram bot token with BotFather once, then this
+          one-click flow only needs the sticker link. We call Telegram’s Bot
+          API to download sticker files and prepare them for WhatsApp. WhatsApp
+          still requires a sticker app to publish packs, so we generate the
+          compatible JSON and open WhatsApp for you.
         </p>
       </section>
 
