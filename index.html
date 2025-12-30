@@ -23,6 +23,26 @@
     </header>
 
     <main>
+      <section class="card highlight">
+        <h2>One-tap Telegram → WhatsApp transfer</h2>
+        <p>
+          Connect your Telegram account via the API, press once, and the app
+          will enumerate every installed sticker pack, split them into
+          WhatsApp-ready bundles of 30, and generate a contents.json payload.
+        </p>
+        <div class="actions">
+          <button id="oneTapTransfer" type="button" disabled>
+            Run one-tap transfer
+          </button>
+          <button id="copyJson" type="button" class="ghost" disabled>
+            Copy JSON
+          </button>
+        </div>
+        <div id="oneTapStatus" class="status">
+          Waiting for Telegram credentials and sticker data.
+        </div>
+      </section>
+
       <section class="card">
         <h2>1. Load Telegram stickers</h2>
         <p>
@@ -65,9 +85,6 @@
           <a id="openWhatsApp" class="link" href="https://www.whatsapp.com/" target="_blank" rel="noreferrer">
             Open WhatsApp
           </a>
-          <button id="copyJson" type="button" class="ghost" disabled>
-            Copy JSON
-          </button>
         </div>
         <p class="note">
           Tip: keep the JSON as the “contents.json” file for WhatsApp sticker

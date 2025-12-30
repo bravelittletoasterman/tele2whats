@@ -6,6 +6,8 @@ const buildPacks = document.getElementById("buildPacks");
 const downloadJson = document.getElementById("downloadJson");
 const output = document.getElementById("output");
 const copyJson = document.getElementById("copyJson");
+const oneTapTransfer = document.getElementById("oneTapTransfer");
+const oneTapStatus = document.getElementById("oneTapStatus");
 
 let deferredPrompt;
 let telegramPacks = [];
@@ -82,10 +84,11 @@ fileInput.addEventListener("change", async (event) => {
 });
 
 buildPacks.addEventListener("click", () => {
-  whatsappPayload = buildWhatsAppPayload(telegramPacks);
-  output.textContent = JSON.stringify(whatsappPayload, null, 2);
-  downloadJson.disabled = false;
-  copyJson.disabled = false;
+  runTransfer();
+});
+
+oneTapTransfer.addEventListener("click", () => {
+  runTransfer();
 });
 
 copyJson.addEventListener("click", async () => {
@@ -118,6 +121,7 @@ function updateSummary() {
   if (!telegramPacks.length) {
     telegramSummary.textContent = "No sticker packs loaded.";
     buildPacks.disabled = true;
+    oneTapTransfer.disabled = true;
     return;
   }
 
@@ -127,6 +131,24 @@ function updateSummary() {
   );
   telegramSummary.textContent = `${telegramPacks.length} packs loaded with ${totalStickers} stickers.`;
   buildPacks.disabled = false;
+  oneTapTransfer.disabled = false;
+  oneTapStatus.textContent =
+    "Ready to run the one-tap transfer. Press the button to build WhatsApp packs.";
+}
+
+function runTransfer() {
+  if (!telegramPacks.length) {
+    oneTapStatus.textContent =
+      "Add Telegram sticker data first to run the one-tap transfer.";
+    return;
+  }
+
+  whatsappPayload = buildWhatsAppPayload(telegramPacks);
+  const totalPacks = whatsappPayload.sticker_packs.length;
+  output.textContent = JSON.stringify(whatsappPayload, null, 2);
+  downloadJson.disabled = false;
+  copyJson.disabled = false;
+  oneTapStatus.textContent = `Generated ${totalPacks} WhatsApp-ready packs. Ready to load into your sticker app.`;
 }
 
 function buildWhatsAppPayload(packs) {
